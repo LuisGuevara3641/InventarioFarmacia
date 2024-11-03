@@ -114,7 +114,11 @@
                         <!-- Fecha de Vencimiento -->
                         <div class="form-group">
                             <label for="fecha_vencimiento">Fecha de Vencimiento:</label>
-                            {{ form.fecha_vencimiento }}
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="fecha_vencimiento" 
+                                   name="fecha_vencimiento" 
+                                   value="{% if producto.fecha_vencimiento %}{{ producto.fecha_vencimiento|date:'Y-m-d' }}{% endif %}">
                             {% if form.fecha_vencimiento.errors %}
                                 <div class="alert alert-danger">
                                     {{ form.fecha_vencimiento.errors }}

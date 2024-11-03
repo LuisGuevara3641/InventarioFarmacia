@@ -63,14 +63,15 @@
                         {% for producto in productos %}
                             <tr data-categoria="{{ producto.codigo_categoria }}" 
                                 data-stock="{{ producto.stock }}"
-                                class="{% if producto.stock <= 10 %}table-warning{% endif %} 
+                                data-stock-minimo="{{ producto.stock_minimo }}"
+                                class="{% if producto.stock <= producto.stock_minimo %}table-warning{% endif %} 
                                        {% if producto.stock == 0 %}table-danger{% endif %}">
                                 <td>{{ producto.id_producto }}</td>
                                 <td>{{ producto.nombre }}</td>
                                 <td>{{ producto.codigo_categoria }}</td>
                                 <td>
                                     {{ producto.stock }}
-                                    {% if producto.stock <= 10 and producto.stock > 0 %}
+                                    {% if producto.stock <= producto.stock_minimo and producto.stock > 0 %}
                                         <span class="badge badge-warning">Stock Bajo</span>
                                     {% elif producto.stock == 0 %}
                                         <span class="badge badge-danger">Agotado</span>
@@ -193,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const row = rows[i];
             const text = row.textContent.toLowerCase();
             const categoria = row.dataset.categoria;
-            const stock = parseInt(row.dataset.stock);
+            const stock = parseInt(row.dataset.stock) || 0;
 
             let showRow = text.includes(searchText);
 
@@ -203,10 +204,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             // Filtro de stock
-            if (stockValue === 'bajo' && stock > 10) {
-                showRow = false;
-            } else if (stockValue === 'agotado' && stock > 0) {
-                showRow = false;
+            if (stockValue === 'bajo') {
+                // Mostrar productos con stock mayor a 0 y menor o igual a su stock mínimo
+                const stockMinimo = parseInt(row.dataset.stockMinimo) || 0;
+                showRow = showRow && (stock > 0 && stock <= stockMinimo);
+            } else if (stockValue === 'agotado') {
+                // Mostrar solo productos con stock 0
+                showRow = showRow && stock === 0;
             }
 
             row.style.display = showRow ? '' : 'none';

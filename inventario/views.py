@@ -109,11 +109,7 @@ def editar_producto(request, producto_id):
         form = ProductoForm(request.POST, instance=producto)
         if form.is_valid():
             try:
-                producto = form.save(commit=False)
-                fecha_vencimiento = request.POST.get('fecha_vencimiento')
-                if fecha_vencimiento:
-                    producto.fecha_vencimiento = fecha_vencimiento
-                producto.save()
+                form.save()
                 messages.success(request, 'Producto actualizado exitosamente.')
                 return redirect('lista_productos')
             except Exception as e:
@@ -589,46 +585,57 @@ def detalle_pedido(request, pedido_id):
 @group_required('Administradores')
 def editar_pedido(request, pedido_id):
     pedido = get_object_or_404(Pedido, id_pedido=pedido_id)
+    detalles = DetallePedido.objects.filter(id_pedido=pedido)
+    
     if request.method == 'POST':
         try:
             with transaction.atomic():
-                productos_ids = request.POST.getlist('productos[]')
-                cantidades = request.POST.getlist('cantidades[]')
+                cantidad_nueva = int(request.POST.get('cantidades[]', 0))
+                if cantidad_nueva <= 0:
+                    raise ValidationError('La cantidad debe ser mayor a 0')
+
+                detalle = detalles.first()
+                if not detalle:
+                    raise ValidationError('No se encontró el detalle del pedido')
+
+                # Guardar cantidad anterior para restaurar si hay error
+                cantidad_anterior = detalle.cantidad_pedido
                 
-                # Eliminar detalles anteriores
-                DetallePedido.objects.filter(id_pedido=pedido).delete()
-                
-                total_pedido = 0
-                # Crear nuevos detalles
-                for producto_id, cantidad in zip(productos_ids, cantidades):
-                    producto = get_object_or_404(Producto, id_producto=producto_id)
-                    cantidad = int(cantidad)
-                    subtotal = producto.precio_compra * cantidad
+                try:
+                    # Calcular la diferencia de cantidad
+                    diferencia = cantidad_nueva - cantidad_anterior
                     
-                    DetallePedido.objects.create(
-                        id_pedido=pedido,
-                        id_producto=producto,
-                        cantidad_pedido=cantidad,
-                        total_del_producto=subtotal
-                    )
+                    # Actualizar el stock del producto
+                    producto = detalle.id_producto
+                    producto.stock += diferencia  # Aumentamos el stock si es positivo, disminuimos si es negativo
+                    producto.save()
                     
-                    total_pedido += subtotal
-                
-                # Actualizar el total del pedido
-                pedido.total = total_pedido
-                pedido.save()
-                
-                messages.success(request, 'Pedido actualizado exitosamente.')
-                return redirect('lista_pedidos')
+                    # Actualizar detalle y pedido
+                    detalle.cantidad_pedido = cantidad_nueva
+                    detalle.save()
+                    
+                    pedido.total = cantidad_nueva * detalle.id_producto.precio_compra
+                    pedido.save()
+                    
+                    messages.success(request, 'Pedido actualizado exitosamente')
+                    return redirect('lista_pedidos')
+                except Exception as e:
+                    # Restaurar cantidad anterior si hay error
+                    detalle.cantidad_pedido = cantidad_anterior
+                    producto.stock -= diferencia  # Revertir el cambio en el stock
+                    producto.save()
+                    raise e
+
+        except ValidationError as e:
+            messages.error(request, str(e))
         except Exception as e:
             messages.error(request, f'Error al actualizar el pedido: {str(e)}')
-            return redirect('lista_pedidos')
-    
+
     context = {
         'pedido': pedido,
-        'detalles': DetallePedido.objects.filter(id_pedido=pedido).select_related('id_producto'),
-        'productos': Producto.objects.all()
+        'detalles': detalles,
     }
+    
     return render(request, 'inventario/pedidos/editar_pedido.html', context)
 
 

@@ -30,16 +30,16 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Producto:</label>
-                                        <select class="form-control producto-select" name="productos[]" required>
-                                            <option value="">Seleccione un producto</option>
-                                            {% for producto in productos %}
-                                            <option value="{{ producto.id_producto }}" 
-                                                    data-precio="{{ producto.precio_compra }}"
-                                                    {% if producto.id_producto == detalle.id_producto.id_producto %}selected{% endif %}>
-                                                {{ producto.nombre }} - Q{{ producto.precio_compra }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               value="{{ detalle.id_producto.nombre }} - Q{{ detalle.id_producto.precio_compra }}"
+                                               readonly>
+                                        <input type="hidden" 
+                                               name="productos[]" 
+                                               value="{{ detalle.id_producto.id_producto }}">
+                                        <input type="hidden" 
+                                               class="precio-unitario" 
+                                               value="{{ detalle.id_producto.precio_compra }}">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -81,36 +81,55 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Referencias a elementos del DOM
     const productosContainer = document.getElementById('productos-container');
     const totalInput = document.getElementById('total');
+    const cantidadInput = document.querySelector('.cantidad-input');
+    const precioUnitario = parseFloat(document.querySelector('.precio-unitario').value) || 0;
+    const form = document.getElementById('pedidoForm');
 
-    function calcularTotal(productoItem) {
-        const cantidad = parseInt(productoItem.querySelector('.cantidad-input').value) || 0;
-        const select = productoItem.querySelector('.producto-select');
-        const precio = parseFloat(select.selectedOptions[0]?.dataset.precio) || 0;
-        return cantidad * precio;
-    }
-
+    // Función para actualizar el total
     function actualizarTotal() {
-        const productoItem = document.querySelector('.producto-item');
-        const total = calcularTotal(productoItem);
+        const cantidad = parseInt(cantidadInput.value) || 0;
+        const total = cantidad * precioUnitario;
         totalInput.value = total.toFixed(2);
     }
 
-    // Actualizar total cuando cambie la cantidad o el producto
-    productosContainer.addEventListener('change', function(e) {
-        if (e.target.classList.contains('cantidad-input') || 
-            e.target.classList.contains('producto-select')) {
+    // Función para validar la cantidad
+    function validarCantidad() {
+        const cantidad = parseInt(cantidadInput.value) || 0;
+        if (cantidad <= 0) {
+            alert('La cantidad debe ser mayor a 0');
+            cantidadInput.value = 1;
+            actualizarTotal();
+            return false;
+        }
+        return true;
+    }
+
+    // Eventos para la cantidad
+    cantidadInput.addEventListener('input', function() {
+        actualizarTotal();
+    });
+
+    cantidadInput.addEventListener('change', function() {
+        if (validarCantidad()) {
             actualizarTotal();
         }
     });
 
-    // También actualizar cuando se escriba en el campo de cantidad
-    productosContainer.addEventListener('input', function(e) {
-        if (e.target.classList.contains('cantidad-input')) {
-            actualizarTotal();
-        }
-    });
+    // Validación del formulario antes de enviar
+    form.addEventListener('submit', function(e) {
+    if (!validarCantidad()) {
+        e.preventDefault();
+        return false;
+    } });
+
+    // Deshabilitar la selección de producto en modo edición
+    const productoSelect = document.querySelector('.producto-select');
+    if (productoSelect) {
+        productoSelect.disabled = true;
+    }
 
     // Calcular total inicial
     actualizarTotal();
