@@ -1,0 +1,178 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Crear Venta{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Crear Nueva Venta</h2>
+        </div>
+        <div class="card-body">
+            <form method="post" id="ventaForm">
+                {% csrf_token %}
+                
+                <!-- Sección Cliente -->
+                <div class="form-group">
+                    <label for="cliente"><strong>Cliente:</strong></label>
+                    <select class="form-control" id="cliente" name="cliente" required>
+                        <option value="">Seleccione un cliente</option>
+                        {% for cliente in clientes %}
+                            <option value="{{ cliente.nit }}">
+                                {{ cliente.nit }} - {{ cliente.primer_nombre }} {{ cliente.primer_apellido }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Sección Productos -->
+                <div class="form-group">
+                    <label for="producto"><strong>Producto:</strong></label>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <select class="form-control" id="producto" name="productos" required>
+                                <option value="">Seleccione un producto</option>
+                                {% for producto in productos %}
+                                    <option value="{{ producto.id_producto }}"
+                                            data-precio="{{ producto.precio_unitario }}"
+                                            data-stock="{{ producto.stock }}">
+                                        {{ producto.nombre }} - Q{{ producto.precio_unitario }} (Stock: {{ producto.stock }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" 
+                                   class="form-control cantidad-input" 
+                                   name="cantidad" 
+                                   placeholder="Cantidad"
+                                   min="1" 
+                                   required>
+                            <small class="text-muted stock-disponible"></small>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" 
+                                   class="form-control subtotal" 
+                                   name="subtotal" 
+                                   placeholder="Subtotal" 
+                                   readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección Total -->
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 offset-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <th class="text-right">Total:</th>
+                                        <td>
+                                            <input type="text" class="form-control" id="total" 
+                                                   name="total" readonly>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Venta
+                    </button>
+                    <a href="{% url 'lista_ventas' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const productoSelect = document.getElementById('producto');
+    const cantidadInput = document.querySelector('.cantidad-input');
+    const subtotalInput = document.querySelector('.subtotal');
+    const totalInput = document.getElementById('total');
+    const stockDisponible = document.querySelector('.stock-disponible');
+
+    function calcularSubtotal() {
+        const cantidad = parseInt(cantidadInput.value) || 0;
+        const selectedOption = productoSelect.options[productoSelect.selectedIndex];
+        const precio = parseFloat(selectedOption.dataset.precio) || 0;
+        const subtotal = cantidad * precio;
+        subtotalInput.value = subtotal.toFixed(2);
+        totalInput.value = subtotal.toFixed(2);
+        if (subtotal === 0) {
+            totalInput.value = "0.00";
+        }
+    }
+
+    function verificarStock() {
+        if (productoSelect.selectedIndex > 0) {
+            const stock = parseInt(productoSelect.options[productoSelect.selectedIndex].dataset.stock);
+            stockDisponible.textContent = `Stock disponible: ${stock}`;
+            cantidadInput.max = stock;
+            
+            if (parseInt(cantidadInput.value) > stock) {
+                cantidadInput.value = stock;
+                calcularSubtotal();
+            }
+        } else {
+            stockDisponible.textContent = '';
+        }
+    }
+
+    cantidadInput.addEventListener('input', () => {
+        verificarStock();
+        calcularSubtotal();
+    });
+
+    productoSelect.addEventListener('change', () => {
+        verificarStock();
+        calcularSubtotal();
+    });
+
+    // Validar formulario antes de enviar
+    document.getElementById('ventaForm').addEventListener('submit', function(e) {
+        if (!productoSelect.value || !cantidadInput.value) {
+            e.preventDefault();
+            alert('Por favor, complete todos los campos requeridos');
+        }
+    });
+});
+</script>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+.btn {
+    margin-right: 0.5rem;
+}
+.stock-disponible {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

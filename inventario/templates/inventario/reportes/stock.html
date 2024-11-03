@@ -1,0 +1,192 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Reporte de Stock{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">Reporte de Stock</h2>
+            <button onclick="window.print()" class="btn btn-light">
+                <i class="fas fa-print"></i> Imprimir Reporte
+            </button>
+        </div>
+        <div class="card-body">
+            <!-- Resumen General -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body">
+                            <h5 class="card-title">Productos con Stock Bajo</h5>
+                            <h2 class="mb-0">{{ productos_stock_bajo.count }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Productos Agotados</h5>
+                            <h2 class="mb-0">{{ productos_agotados.count }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Total de Productos</h5>
+                            <h2 class="mb-0">{{ productos.count }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Productos por Categoría -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Resumen por Categoría</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Categoría</th>
+                                    <th>Total Productos</th>
+                                    <th>Valor Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for categoria in categorias %}
+                                <tr>
+                                    <td>{{ categoria.nombre_categoria }}</td>
+                                    <td>{{ categoria.total_productos }}</td>
+                                    <td>Q{{ categoria.valor_total|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No hay categorías para mostrar</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Productos con Stock Bajo -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Productos con Stock Bajo</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead class="table-warning">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Categoría</th>
+                                    <th>Stock Actual</th>
+                                    <th>Stock Mínimo</th>
+                                    <th>Precio Venta</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for producto in productos_stock_bajo %}
+                                <tr>
+                                    <td>{{ producto.nombre }}</td>
+                                    <td>{{ producto.codigo_categoria.nombre_categoria }}</td>
+                                    <td>{{ producto.stock }}</td>
+                                    <td>{{ producto.stock_minimo }}</td>
+                                    <td>Q{{ producto.precio_venta|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No hay productos con stock bajo</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Productos Agotados -->
+            <div class="card">
+                <div class="card-header">
+                    <h4>Productos Agotados</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead class="table-danger">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Categoría</th>
+                                    <th>Precio Venta</th>
+                                    <th>Última Actualización</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for producto in productos_agotados %}
+                                <tr>
+                                    <td>{{ producto.nombre }}</td>
+                                    <td>{{ producto.codigo_categoria.nombre_categoria }}</td>
+                                    <td>Q{{ producto.precio_venta|floatformat:2 }}</td>
+                                    <td>{{ producto.fecha_actualizacion|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No hay productos agotados</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .navbar, .btn-light {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+    }
+    .card-header {
+        background-color: #fff !important;
+        color: #000 !important;
+    }
+    .table-warning, .table-danger {
+        background-color: #fff !important;
+    }
+    .text-white {
+        color: #000 !important;
+    }
+}
+
+.card {
+    margin-bottom: 1.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.table th {
+    border-top: none;
+}
+
+.table-responsive {
+    margin: 0;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+}
+
+.table thead th {
+    border-bottom: 2px solid #dee2e6;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Editar Pedido{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Editar Pedido #{{ pedido.id_pedido }}</h2>
+        </div>
+        <div class="card-body">
+            <form method="post" id="pedidoForm">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label>Proveedor:</label>
+                    <input type="text" class="form-control" value="{{ pedido.id_proveedor.nombre_proveedor }}" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label>Fecha:</label>
+                    <input type="text" class="form-control" value="{{ pedido.fecha|date:'d/m/Y' }}" readonly>
+                </div>
+
+                <div id="productos-container">
+                    {% for detalle in detalles %}
+                    <div class="producto-item card mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Producto:</label>
+                                        <select class="form-control producto-select" name="productos[]" required>
+                                            <option value="">Seleccione un producto</option>
+                                            {% for producto in productos %}
+                                            <option value="{{ producto.id_producto }}" 
+                                                    data-precio="{{ producto.precio_compra }}"
+                                                    {% if producto.id_producto == detalle.id_producto.id_producto %}selected{% endif %}>
+                                                {{ producto.nombre }} - Q{{ producto.precio_compra }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Cantidad:</label>
+                                        <input type="number" 
+                                               class="form-control cantidad-input" 
+                                               name="cantidades[]" 
+                                               min="1" 
+                                               value="{{ detalle.cantidad_pedido }}"
+                                               required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label>Total:</label>
+                    <input type="text" id="total" name="total" class="form-control" value="{{ pedido.total }}" readonly>
+                </div>
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                    <a href="{% url 'lista_pedidos' %}" class="btn btn-secondary ml-2">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const productosContainer = document.getElementById('productos-container');
+    const totalInput = document.getElementById('total');
+
+    function calcularTotal(productoItem) {
+        const cantidad = parseInt(productoItem.querySelector('.cantidad-input').value) || 0;
+        const select = productoItem.querySelector('.producto-select');
+        const precio = parseFloat(select.selectedOptions[0]?.dataset.precio) || 0;
+        return cantidad * precio;
+    }
+
+    function actualizarTotal() {
+        const productoItem = document.querySelector('.producto-item');
+        const total = calcularTotal(productoItem);
+        totalInput.value = total.toFixed(2);
+    }
+
+    // Actualizar total cuando cambie la cantidad o el producto
+    productosContainer.addEventListener('change', function(e) {
+        if (e.target.classList.contains('cantidad-input') || 
+            e.target.classList.contains('producto-select')) {
+            actualizarTotal();
+        }
+    });
+
+    // También actualizar cuando se escriba en el campo de cantidad
+    productosContainer.addEventListener('input', function(e) {
+        if (e.target.classList.contains('cantidad-input')) {
+            actualizarTotal();
+        }
+    });
+
+    // Calcular total inicial
+    actualizarTotal();
+});
+</script>
+{% endblock %}

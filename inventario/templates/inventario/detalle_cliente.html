@@ -1,0 +1,118 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Detalle del Cliente{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Información del Cliente</h2>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th class="w-25">NIT:</th>
+                            <td>{{ cliente.nit }}</td>
+                        </tr>
+                        <tr>
+                            <th>Primer Nombre:</th>
+                            <td>{{ cliente.primer_nombre }}</td>
+                        </tr>
+                        <tr>
+                            <th>Segundo Nombre:</th>
+                            <td>{{ cliente.segundo_nombre|default:"--" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Primer Apellido:</th>
+                            <td>{{ cliente.primer_apellido }}</td>
+                        </tr>
+                        <tr>
+                            <th>Segundo Apellido:</th>
+                            <td>{{ cliente.segundo_apellido|default:"--" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Dirección:</th>
+                            <td>{{ cliente.direccion }}</td>
+                        </tr>
+                        <tr>
+                            <th>Teléfono:</th>
+                            <td>{{ cliente.telefono }}</td>
+                        </tr>
+                        <tr>
+                            <th>Correo:</th>
+                            <td>{{ cliente.correo }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'editar_cliente' cliente.nit %}" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Editar Cliente
+        </a>
+        <a href="{% url 'lista_clientes' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver a la Lista
+        </a>
+        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#eliminarClienteModal">
+            <i class="fas fa-trash"></i> Eliminar Cliente
+        </button>
+    </div>
+
+    <!-- Modal de Confirmación de Eliminación -->
+    <div class="modal fade" id="eliminarClienteModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Eliminación</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro que desea eliminar al cliente {{ cliente.primer_nombre }} {{ cliente.primer_apellido }}?</p>
+                    <p class="text-danger">Esta acción no se puede deshacer.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <form action="{% url 'eliminar_cliente' cliente.nit %}" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<style>
+    .table th {
+        font-weight: bold;
+        color: #495057;
+    }
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        margin-bottom: 1.5rem;
+    }
+    .btn {
+        margin-right: 0.5rem;
+    }
+    .modal-header {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}

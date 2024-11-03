@@ -1,0 +1,65 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Editar Categoría{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Editar Categoría</h2>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- ID Categoría (readonly) -->
+                <div class="form-group">
+                    <label for="codigo_categoria">ID Categoría:</label>
+                    <input type="text" 
+                           class="form-control" 
+                           id="codigo_categoria" 
+                           value="{{ categoria.codigo_categoria }}"
+                           readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.nombre_categoria.id_for_label }}">{{ form.nombre_categoria.label }}:</label>
+                    {{ form.nombre_categoria }}
+                    {% if form.nombre_categoria.errors %}
+                        <div class="alert alert-danger">
+                            {{ form.nombre_categoria.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.descripcion_categoria.id_for_label }}">{{ form.descripcion_categoria.label }}:</label>
+                    {{ form.descripcion_categoria }}
+                    {% if form.descripcion_categoria.errors %}
+                        <div class="alert alert-danger">
+                            {{ form.descripcion_categoria.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                    <a href="{% url 'lista_categorias' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

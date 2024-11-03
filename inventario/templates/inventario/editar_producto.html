@@ -1,0 +1,166 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Editar Producto{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Editar Producto</h2>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <!-- ID Producto -->
+                        <div class="form-group">
+                            <label for="id_producto">ID Producto:</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="id_producto" 
+                                   value="{{ producto.id_producto }}"
+                                   readonly>
+                        </div>
+
+                        <!-- Categoría -->
+                        <div class="form-group">
+                            <label for="codigo_categoria">Categoría:</label>
+                            {{ form.codigo_categoria }}
+                            {% if form.codigo_categoria.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.codigo_categoria.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Nombre -->
+                        <div class="form-group">
+                            <label for="nombre">Nombre:</label>
+                            {{ form.nombre }}
+                            {% if form.nombre.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.nombre.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="form-group">
+                            <label for="descripcion">Descripción:</label>
+                            {{ form.descripcion }}
+                            {% if form.descripcion.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.descripcion.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Precio Venta -->
+                        <div class="form-group">
+                            <label for="precio_venta">Precio Venta:</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Q</span>
+                                </div>
+                                {{ form.precio_venta }}
+                            </div>
+                            {% if form.precio_venta.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.precio_venta.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Precio Compra -->
+                        <div class="form-group">
+                            <label for="precio_compra">Precio Compra:</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Q</span>
+                                </div>
+                                {{ form.precio_compra }}
+                            </div>
+                            {% if form.precio_compra.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.precio_compra.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Stock -->
+                        <div class="form-group">
+                            <label for="stock">Stock:</label>
+                            {{ form.stock }}
+                            {% if form.stock.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.stock.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Stock Mínimo -->
+                        <div class="form-group">
+                            <label for="stock_minimo">Stock Mínimo:</label>
+                            {{ form.stock_minimo }}
+                            {% if form.stock_minimo.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.stock_minimo.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Fecha de Vencimiento -->
+                        <div class="form-group">
+                            <label for="fecha_vencimiento">Fecha de Vencimiento:</label>
+                            {{ form.fecha_vencimiento }}
+                            {% if form.fecha_vencimiento.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.fecha_vencimiento.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                    <a href="{% url 'detalle_producto' producto.id_producto %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+.form-group {
+    margin-bottom: 1rem;
+}
+.btn {
+    margin-right: 0.5rem;
+}
+.alert {
+    margin-top: 0.5rem;
+}
+</style>
+{% endblock %}

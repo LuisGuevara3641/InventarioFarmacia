@@ -1,0 +1,154 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Detalle del Proveedor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Información del Proveedor</h2>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th class="w-25">ID:</th>
+                            <td>{{ proveedor.id_proveedor }}</td>
+                        </tr>
+                        <tr>
+                            <th>Nombre:</th>
+                            <td>{{ proveedor.nombre_proveedor }}</td>
+                        </tr>
+                        <tr>
+                            <th>Dirección:</th>
+                            <td>{{ proveedor.direccion }}</td>
+                        </tr>
+                        <tr>
+                            <th>Teléfono:</th>
+                            <td>
+                                <a href="tel:{{ proveedor.telefono }}" class="text-decoration-none">
+                                    {{ proveedor.telefono }}
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Correo:</th>
+                            <td>
+                                <a href="mailto:{{ proveedor.correo }}" class="text-decoration-none">
+                                    {{ proveedor.correo }}
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Sección de Productos Suministrados -->
+            <div class="card mt-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Productos Suministrados</h5>
+                </div>
+                <div class="card-body">
+                    {% if productos_suministrados %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nombre</th>
+                                        <th>Categoría</th>
+                                        <th>Stock</th>
+                                        <th>Precio</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for producto in productos_suministrados %}
+                                        <tr>
+                                            <td>{{ producto.id_producto }}</td>
+                                            <td>{{ producto.nombre }}</td>
+                                            <td>{{ producto.codigo_categoria.nombre_categoria }}</td>
+                                            <td>{{ producto.stock }}</td>
+                                            <td>Q{{ producto.precio_compra|floatformat:2 }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No hay productos asociados a este proveedor</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'editar_proveedor' proveedor.id_proveedor %}" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Editar Proveedor
+        </a>
+        <a href="{% url 'lista_proveedores' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver a la Lista
+        </a>
+        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#eliminarProveedorModal">
+            <i class="fas fa-trash"></i> Eliminar Proveedor
+        </button>
+    </div>
+
+    <!-- Modal de Confirmación de Eliminación -->
+    <div class="modal fade" id="eliminarProveedorModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Eliminación</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro que desea eliminar al proveedor "{{ proveedor.nombre_proveedor }}"?</p>
+                    <p class="text-danger">Esta acción no se puede deshacer y eliminará todos los productos asociados.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <form action="{% url 'eliminar_proveedor' proveedor.id_proveedor %}" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+.table th {
+    font-weight: bold;
+    color: #495057;
+}
+.btn {
+    margin-right: 0.5rem;
+}
+.badge {
+    margin-left: 0.5rem;
+}
+.modal-header {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

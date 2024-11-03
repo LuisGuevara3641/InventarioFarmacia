@@ -1,0 +1,167 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Lista de Clientes{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">Lista de Clientes</h2>
+            <a href="{% url 'crear_cliente' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Nuevo Cliente
+            </a>
+        </div>
+        <div class="card-body">
+            <!-- Barra de búsqueda -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" 
+                               id="searchInput" 
+                               class="form-control" 
+                               placeholder="Buscar cliente...">
+                        <div class="input-group-append">
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Clientes -->
+            <div class="table-responsive">
+                <table class="table table-hover" id="clientesTable">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>NIT</th>
+                            <th>Nombre Completo</th>
+                            <th>Teléfono</th>
+                            <th>Correo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cliente in clientes %}
+                            <tr>
+                                <td>{{ cliente.nit }}</td>
+                                <td>
+                                    {{ cliente.primer_nombre }} 
+                                    {% if cliente.segundo_nombre %}{{ cliente.segundo_nombre }}{% endif %}
+                                    {{ cliente.primer_apellido }}
+                                    {% if cliente.segundo_apellido %}{{ cliente.segundo_apellido }}{% endif %}
+                                </td>
+                                <td>
+                                    <a href="tel:{{ cliente.telefono }}" class="text-decoration-none">
+                                        {{ cliente.telefono }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="mailto:{{ cliente.correo }}" class="text-decoration-none">
+                                        {{ cliente.correo }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'detalle_cliente' cliente.nit %}" 
+                                           class="btn btn-info btn-sm" 
+                                           title="Ver detalles">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'editar_cliente' cliente.nit %}" 
+                                           class="btn btn-warning btn-sm" 
+                                           title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" 
+                                                class="btn btn-danger btn-sm" 
+                                                title="Eliminar"
+                                                data-toggle="modal" 
+                                                data-target="#eliminarModal{{ cliente.nit }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- Modal de Confirmación de Eliminación -->
+                                    <div class="modal fade" id="eliminarModal{{ cliente.nit }}" tabindex="-1" role="dialog">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Confirmar Eliminación</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>¿Está seguro que desea eliminar al cliente "{{ cliente.primer_nombre }} {{ cliente.primer_apellido }}"?</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                                                    <form action="{% url 'eliminar_cliente' cliente.nit %}" method="post" style="display: inline;">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No hay clientes registrados.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+.table th {
+    border-top: none;
+}
+.btn-group {
+    white-space: nowrap;
+}
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const table = document.getElementById('clientesTable');
+    const rows = table.getElementsByTagName('tr');
+
+    searchInput.addEventListener('keyup', function(e) {
+        const searchText = e.target.value.toLowerCase();
+
+        // Empezar desde 1 para saltar el encabezado
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchText) ? '' : 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

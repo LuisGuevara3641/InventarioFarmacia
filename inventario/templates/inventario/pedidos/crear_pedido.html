@@ -1,0 +1,146 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Crear Pedido{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Crear Nuevo Pedido</h2>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" id="pedidoForm">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="{{ form.id_proveedor.id_for_label }}">Proveedor:</label>
+                    {{ form.id_proveedor }}
+                    {% if form.id_proveedor.errors %}
+                        <div class="alert alert-danger">
+                            {{ form.id_proveedor.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.fecha.id_for_label }}">Fecha:</label>
+                    {{ form.fecha }}
+                    {% if form.fecha.errors %}
+                        <div class="alert alert-danger">
+                            {{ form.fecha.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div id="productos-container">
+                    <div class="producto-item card mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Producto:</label>
+                                        <select class="form-control producto-select" name="productos[]" required>
+                                            <option value="">Seleccione un producto</option>
+                                            {% for producto in productos %}
+                                            <option value="{{ producto.id_producto }}" 
+                                                    data-precio="{{ producto.precio_compra }}">
+                                                {{ producto.nombre }} - Q{{ producto.precio_compra }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Cantidad:</label>
+                                        <input type="number" 
+                                               class="form-control cantidad-input" 
+                                               name="cantidades[]" 
+                                               min="1" 
+                                               required>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Subtotal:</label>
+                                        <input type="text" 
+                                               class="form-control subtotal" 
+                                               readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Total:</label>
+                    <input type="text" id="total" name="total" class="form-control" readonly>
+                </div>
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Pedido
+                    </button>
+                    <a href="{% url 'lista_pedidos' %}" class="btn btn-secondary ml-2">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const productosContainer = document.getElementById('productos-container');
+    const totalInput = document.getElementById('total');
+
+    function calcularSubtotal(productoItem) {
+        const cantidad = parseInt(productoItem.querySelector('.cantidad-input').value) || 0;
+        const select = productoItem.querySelector('.producto-select');
+        const precio = parseFloat(select.selectedOptions[0]?.dataset.precio) || 0;
+        return cantidad * precio;
+    }
+
+    function actualizarTotales() {
+        let totalGeneral = 0;
+        document.querySelectorAll('.producto-item').forEach(item => {
+            const subtotal = calcularSubtotal(item);
+            item.querySelector('.subtotal').value = subtotal.toFixed(2);
+            totalGeneral += subtotal;
+        });
+        totalInput.value = totalGeneral.toFixed(2);
+    }
+
+    // Actualizar al cambiar producto o cantidad
+    productosContainer.addEventListener('change', function(e) {
+        if (e.target.matches('.producto-select') || e.target.matches('.cantidad-input')) {
+            actualizarTotales();
+        }
+    });
+
+    productosContainer.addEventListener('input', function(e) {
+        if (e.target.matches('.cantidad-input')) {
+            actualizarTotales();
+        }
+    });
+
+    // Calcular totales iniciales
+    actualizarTotales();
+});
+</script>
+{% endblock %}

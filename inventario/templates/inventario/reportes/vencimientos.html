@@ -1,0 +1,152 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Reporte de Vencimientos{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">Reporte de Vencimientos</h2>
+            <button onclick="window.print()" class="btn btn-light">
+                <i class="fas fa-print"></i> Imprimir Reporte
+            </button>
+        </div>
+        <div class="card-body">
+            <!-- Resumen General -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Próximos a Vencer (30 días)</h5>
+                            <h2 class="mb-0">{{ total_proximos }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Productos Vencidos</h5>
+                            <h2 class="mb-0">{{ total_vencidos }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Productos Próximos a Vencer -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Productos Próximos a Vencer</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Categoría</th>
+                                    <th>Fecha Vencimiento</th>
+                                    <th>Días Restantes</th>
+                                    <th>Stock</th>
+                                    <th>Precio Venta</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for producto in proximos_a_vencer %}
+                                <tr>
+                                    <td>{{ producto.nombre }}</td>
+                                    <td>{{ producto.codigo_categoria.nombre_categoria }}</td>
+                                    <td>{{ producto.fecha_vencimiento|date:"d/m/Y" }}</td>
+                                    <td>{{ producto.dias_hasta_vencimiento }} días</td>
+                                    <td>{{ producto.stock }}</td>
+                                    <td>Q{{ producto.precio_venta|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No hay productos próximos a vencer</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Productos Vencidos -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Productos Vencidos</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Categoría</th>
+                                    <th>Fecha Vencimiento</th>
+                                    <th>Días Vencido</th>
+                                    <th>Stock</th>
+                                    <th>Precio Venta</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for producto in productos_vencidos %}
+                                <tr>
+                                    <td>{{ producto.nombre }}</td>
+                                    <td>{{ producto.codigo_categoria.nombre_categoria }}</td>
+                                    <td>{{ producto.fecha_vencimiento|date:"d/m/Y" }}</td>
+                                    <td>
+                                        {{ producto.dias_vencido }} días
+                                        <span class="badge badge-danger">Vencido</span>
+                                    </td>
+                                    <td>{{ producto.stock }}</td>
+                                    <td>Q{{ producto.precio_venta|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No hay productos vencidos</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .navbar, .btn-light {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+    }
+    .card-header {
+        background-color: #fff !important;
+        color: #000 !important;
+    }
+    .table-warning, .table-danger {
+        background-color: #fff !important;
+    }
+    .text-white {
+        color: #000 !important;
+    }
+}
+
+.card {
+    margin-bottom: 1.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.table th {
+    border-top: none;
+}
+
+.badge {
+    margin-left: 0.5rem;
+}
+</style>
+{% endblock %}

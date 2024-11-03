@@ -1,0 +1,186 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Editar Cliente{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Editar Cliente</h2>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <!-- NIT (readonly porque es la llave primaria) -->
+                        <div class="form-group">
+                            <label for="nit">NIT:</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="nit" 
+                                   name="nit" 
+                                   value="{{ form.nit.value|default:'' }}"
+                                   readonly>
+                            {% if form.nit.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.nit.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Primer Nombre -->
+                        <div class="form-group">
+                            <label for="primer_nombre">Primer Nombre:</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="primer_nombre" 
+                                   name="primer_nombre"
+                                   value="{{ form.primer_nombre.value|default:'' }}"
+                                   required>
+                            {% if form.primer_nombre.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.primer_nombre.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Segundo Nombre -->
+                        <div class="form-group">
+                            <label for="segundo_nombre">Segundo Nombre:</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="segundo_nombre" 
+                                   name="segundo_nombre"
+                                   value="{{ form.segundo_nombre.value|default:'' }}">
+                            {% if form.segundo_nombre.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.segundo_nombre.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Primer Apellido -->
+                        <div class="form-group">
+                            <label for="primer_apellido">Primer Apellido:</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="primer_apellido" 
+                                   name="primer_apellido"
+                                   value="{{ form.primer_apellido.value|default:'' }}"
+                                   required>
+                            {% if form.primer_apellido.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.primer_apellido.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Segundo Apellido -->
+                        <div class="form-group">
+                            <label for="segundo_apellido">Segundo Apellido:</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="segundo_apellido" 
+                                   name="segundo_apellido"
+                                   value="{{ form.segundo_apellido.value|default:'' }}">
+                            {% if form.segundo_apellido.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.segundo_apellido.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Dirección -->
+                        <div class="form-group">
+                            <label for="direccion">Dirección:</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="direccion" 
+                                   name="direccion"
+                                   value="{{ form.direccion.value|default:'' }}"
+                                   required>
+                            {% if form.direccion.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.direccion.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Teléfono -->
+                        <div class="form-group">
+                            <label for="telefono">Teléfono:</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="telefono" 
+                                   name="telefono"
+                                   value="{{ form.telefono.value|default:'' }}"
+                                   pattern="[0-9]{8}"
+                                   title="El número debe tener 8 dígitos"
+                                   required>
+                            {% if form.telefono.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.telefono.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Correo -->
+                        <div class="form-group">
+                            <label for="correo">Correo Electrónico:</label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="correo" 
+                                   name="correo"
+                                   value="{{ form.correo.value|default:'' }}"
+                                   required>
+                            {% if form.correo.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.correo.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                    <a href="{% url 'detalle_cliente' form.instance.nit %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+.form-group {
+    margin-bottom: 1rem;
+}
+.btn {
+    margin-right: 0.5rem;
+}
+.alert {
+    margin-top: 0.5rem;
+}
+</style>
+{% endblock %}

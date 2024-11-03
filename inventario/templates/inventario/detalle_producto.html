@@ -1,0 +1,135 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Detalle del Producto{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Información del Producto</h2>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th class="w-25">ID:</th>
+                            <td>{{ producto.id_producto }}</td>
+                        </tr>
+                        <tr>
+                            <th>Nombre:</th>
+                            <td>{{ producto.nombre }}</td>
+                        </tr>
+                        <tr>
+                            <th>Categoría:</th>
+                            <td>{{ producto.codigo_categoria.nombre_categoria }}</td>
+                        </tr>
+                        <tr>
+                            <th>Descripción:</th>
+                            <td>{{ producto.descripcion|default:"--" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Precio Compra:</th>
+                            <td>Q{{ producto.precio_compra|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <th>Precio Venta:</th>
+                            <td>Q{{ producto.precio_venta|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <th>Stock:</th>
+                            <td>
+                                {{ producto.stock }}
+                                {% if producto.stock <= 10 %}
+                                    <span class="badge badge-danger">Stock Bajo</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Fecha de Vencimiento:</th>
+                            <td>
+                                {% if producto.fecha_vencimiento %}
+                                    {{ producto.fecha_vencimiento|date:"d/m/Y" }}
+                                    {% if producto.esta_vencido %}
+                                        <span class="badge badge-danger">Vencido</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">No definida</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'editar_producto' producto.id_producto %}" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Editar Producto
+        </a>
+        <a href="{% url 'lista_productos' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver a la Lista
+        </a>
+        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#eliminarProductoModal">
+            <i class="fas fa-trash"></i> Eliminar Producto
+        </button>
+    </div>
+
+    <!-- Modal de Confirmación de Eliminación -->
+    <div class="modal fade" id="eliminarProductoModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Eliminación</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro que desea eliminar el producto "{{ producto.nombre }}"?</p>
+                    <p class="text-danger">Esta acción no se puede deshacer.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <form action="{% url 'eliminar_producto' producto.id_producto %}" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+.table th {
+    font-weight: bold;
+    color: #495057;
+}
+.btn {
+    margin-right: 0.5rem;
+}
+.badge {
+    margin-left: 0.5rem;
+}
+.modal-header {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

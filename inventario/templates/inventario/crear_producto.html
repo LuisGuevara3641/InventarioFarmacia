@@ -1,0 +1,192 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Crear Producto{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Crear Nuevo Producto</h2>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <!-- Categoría -->
+                        <div class="form-group">
+                            <label for="codigo_categoria">Categoría:</label>
+                            <select class="form-control" id="codigo_categoria" name="codigo_categoria" required>
+                                <option value="">Seleccione una categoría</option>
+                                {% for categoria in form.codigo_categoria.field.queryset %}
+                                <option value="{{ categoria.codigo_categoria }}" 
+                                        {% if form.codigo_categoria.value|stringformat:"s" == categoria.codigo_categoria|stringformat:"s" %}selected{% endif %}>
+                                    {{ categoria.nombre_categoria }}
+                                </option>
+                            {% endfor %}
+                            </select>
+                            {% if form.codigo_categoria.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.codigo_categoria.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Nombre -->
+                        <div class="form-group">
+                            <label for="nombre">Nombre del Producto:</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="nombre" 
+                                   name="nombre" 
+                                   value="{{ form.nombre.value|default:'' }}"
+                                   required>
+                            {% if form.nombre.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.nombre.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="form-group">
+                            <label for="descripcion">Descripción:</label>
+                            <textarea class="form-control" 
+                                      id="descripcion" 
+                                      name="descripcion" 
+                                      rows="3">{{ form.descripcion.value|default:'' }}</textarea>
+                            {% if form.descripcion.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.descripcion.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Precio Venta -->
+                        <div class="form-group">
+                            <label for="precio_venta">Precio Venta (Q):</label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="precio_venta" 
+                                   name="precio_venta" 
+                                   value="{{ form.precio_venta.value|default:'' }}"
+                                   step="0.01"
+                                   min="0.01"
+                                   required>
+                            {% if form.precio_venta.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.precio_venta.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Precio Compra -->
+                        <div class="form-group">
+                            <label for="precio_compra">Precio Compra (Q):</label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="precio_compra" 
+                                   name="precio_compra" 
+                                   value="{{ form.precio_compra.value|default:'' }}"
+                                   step="0.01"
+                                   min="0.01"
+                                   required>
+                            {% if form.precio_compra.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.precio_compra.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Stock -->
+                        <div class="form-group">
+                            <label for="stock">Stock:</label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="stock" 
+                                   name="stock" 
+                                   value="{{ form.stock.value|default:'' }}"
+                                   min="0"
+                                   required>
+                            {% if form.stock.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.stock.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Stock Mínimo -->
+                        <div class="form-group">
+                            <label for="stock_minimo">Stock Mínimo:</label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="stock_minimo" 
+                                   name="stock_minimo" 
+                                   value="{{ form.stock_minimo.value|default:10 }}"
+                                   min="0"
+                                   required>
+                            {% if form.stock_minimo.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.stock_minimo.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Fecha de Vencimiento -->
+                        <div class="form-group">
+                            <label for="fecha_vencimiento">Fecha de Vencimiento:</label>
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="fecha_vencimiento" 
+                                   name="fecha_vencimiento" 
+                                   value="{% if form.fecha_vencimiento.value %}{{ form.fecha_vencimiento.value|date:'Y-m-d' }}{% endif %}">
+                            {% if form.fecha_vencimiento.errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.fecha_vencimiento.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Producto
+                    </button>
+                    <a href="{% url 'lista_productos' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+.form-group {
+    margin-bottom: 1rem;
+}
+.btn {
+    margin-right: 0.5rem;
+}
+.alert {
+    margin-top: 0.5rem;
+}
+</style>
+{% endblock %}

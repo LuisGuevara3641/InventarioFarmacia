@@ -1,0 +1,269 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Lista de Ventas{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">Lista de Ventas</h2>
+            <a href="{% url 'crear_venta' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Nueva Venta
+            </a>
+        </div>
+        <div class="card-body">
+            <!-- Filtros y Búsqueda -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <input type="text" 
+                               id="searchInput" 
+                               class="form-control" 
+                               placeholder="Buscar venta...">
+                        <div class="input-group-append">
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <input type="date" 
+                           id="fechaFilter" 
+                           class="form-control" 
+                           value="{{ now|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-4">
+                    <select id="clienteFilter" class="form-control">
+                        <option value="">Todos los clientes</option>
+                        {% regroup ventas by nit as clientes_list %}
+                        {% for cliente in clientes_list %}
+                            <option value="{{ cliente.grouper.nit }}">
+                                {{ cliente.grouper.primer_nombre }} {{ cliente.grouper.primer_apellido }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tabla de Ventas -->
+            <div class="table-responsive">
+                <table class="table table-hover" id="ventasTable">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID Venta</th>
+                            <th>Cliente</th>
+                            <th>Fecha</th>
+                            <th>Total</th>
+                            <th>Productos</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for venta in ventas %}
+                            <tr data-fecha="{{ venta.fecha|date:'Y-m-d' }}"
+                                data-cliente="{{ venta.nit.nit }}">
+                                <td>{{ venta.id_venta }}</td>
+                                <td>
+                                    {{ venta.nit.primer_nombre }} {{ venta.nit.primer_apellido }}
+                                    <br>
+                                    <small class="text-muted">NIT: {{ venta.nit.nit }}</small>
+                                </td>
+                                <td>
+                                    {{ venta.fecha|date:"d/m/Y" }} {{ venta.hora|time:"H:i" }}
+                                    <br>
+                                    <small class="text-muted">
+                                        {{ venta.fecha|timesince }} atrás
+                                    </small>
+                                </td>
+                                <td>
+                                    <strong>Q{{ venta.total_venta|floatformat:2 }}</strong>
+                                </td>
+                                <td>
+                                    <button type="button" 
+                                            class="btn btn-info btn-sm"
+                                            data-toggle="modal"
+                                            data-target="#detalleModal{{ venta.id_venta }}">
+                                        <i class="fas fa-list"></i> Ver Productos
+                                    </button>
+
+                                    <!-- Modal de Detalle de Productos -->
+                                    <div class="modal fade" id="detalleModal{{ venta.id_venta }}" tabindex="-1">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">
+                                                        Detalle de Venta #{{ venta.id_venta }}
+                                                    </h5>
+                                                    <button type="button" class="close" data-dismiss="modal">
+                                                        <span>&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <table class="table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Producto</th>
+                                                                <th>Cantidad</th>
+                                                                <th>Precio Venta</th>
+                                                                <th>Subtotal</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for detalle in venta.detalleventa_set.all %}
+                                                                <tr>
+                                                                    <td>{{ detalle.id_producto.nombre }}</td>
+                                                                    <td>{{ detalle.cantidad_producto }}</td>
+                                                                    <td>Q{{ detalle.precio_venta|floatformat:2 }}</td>
+                                                                    <td>Q{{ detalle.subtotal|floatformat:2 }}</td>
+                                                                </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                        <tfoot>
+                                                            <tr>
+                                                                <td colspan="3" class="text-right">
+                                                                    <strong>Total:</strong>
+                                                                </td>
+                                                                <td>
+                                                                    <strong>Q{{ venta.total_venta|default:"0.00"|floatformat:2 }}</strong>
+                                                                </td>
+                                                            </tr>
+                                                        </tfoot>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'editar_venta' venta.id_venta %}" 
+                                           class="btn btn-warning btn-sm" 
+                                           title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" 
+                                                class="btn btn-danger btn-sm" 
+                                                title="Eliminar"
+                                                data-toggle="modal" 
+                                                data-target="#eliminarModal{{ venta.id_venta }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- Modal de Confirmación de Eliminación -->
+                                    <div class="modal fade" id="eliminarModal{{ venta.id_venta }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Confirmar Eliminación</h5>
+                                                    <button type="button" class="close" data-dismiss="modal">
+                                                        <span>&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>¿Está seguro que desea eliminar la venta #{{ venta.id_venta }}?</p>
+                                                    <p class="text-danger">
+                                                        <i class="fas fa-exclamation-triangle"></i>
+                                                        Esta acción no se puede deshacer.
+                                                    </p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                                        Cancelar
+                                                    </button>
+                                                    <form action="{% url 'eliminar_venta' venta.id_venta %}" 
+                                                          method="post" 
+                                                          style="display: inline;">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-danger">
+                                                            <i class="fas fa-trash"></i> Eliminar
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No hay ventas registradas.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+.table th {
+    border-top: none;
+}
+.btn-group {
+    white-space: nowrap;
+}
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const fechaFilter = document.getElementById('fechaFilter');
+    const clienteFilter = document.getElementById('clienteFilter');
+    const table = document.getElementById('ventasTable');
+    const rows = table.getElementsByTagName('tr');
+
+    function filterTable() {
+        const searchText = searchInput.value.toLowerCase();
+        const fechaValue = fechaFilter.value;
+        const clienteValue = clienteFilter.value;
+
+        // Empezar desde 1 para saltar el encabezado
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const text = row.textContent.toLowerCase();
+            const fecha = row.dataset.fecha;
+            const cliente = row.dataset.cliente;
+
+            let showRow = text.includes(searchText);
+
+            // Filtro de fecha
+            if (fechaValue && fecha !== fechaValue) {
+                showRow = false;
+            }
+
+            // Filtro de cliente
+            if (clienteValue && cliente !== clienteValue) {
+                showRow = false;
+            }
+
+            row.style.display = showRow ? '' : 'none';
+        }
+    }
+
+    searchInput.addEventListener('keyup', filterTable);
+    fechaFilter.addEventListener('change', filterTable);
+    clienteFilter.addEventListener('change', filterTable);
+});
+</script>
+{% endblock %}
