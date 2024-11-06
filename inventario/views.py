@@ -13,6 +13,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .decorators import group_required
+from datetime import datetime
 import os
 
 # ---------------------------------- Vista para iniciar sesión ----------------------------------
@@ -426,40 +427,53 @@ def eliminar_venta(request, venta_id):
 
 # ---------------------------------- Vistas de Reportes ----------------------------------
 @login_required
-@group_required('Administradores')
+@group_required('Administradores','Empleados')
 def reporte_ventas(request):
-    # Obtener fechas del filtro
     fecha_inicio = request.GET.get('fecha_inicio')
     fecha_fin = request.GET.get('fecha_fin')
     
-    # Query base
+    # Inicializar el queryset base
     ventas = Venta.objects.all()
     
-    # Aplicar filtros si existen
+    fecha_inicio_dt = None
+    fecha_fin_dt = None
+    
     if fecha_inicio and fecha_fin:
-        ventas = ventas.filter(fecha__range=[fecha_inicio, fecha_fin])
+        try:
+            # Convertir las fechas de string a datetime
+            fecha_inicio_dt = datetime.strptime(fecha_inicio, '%Y-%m-%d')
+            fecha_fin_dt = datetime.strptime(fecha_fin, '%Y-%m-%d')
+            
+            # Ajustar fecha_fin para incluir todo el día
+            fecha_fin_dt = fecha_fin_dt.replace(hour=23, minute=59, second=59)
+            
+            # Filtrar las ventas
+            ventas = ventas.filter(
+                fecha__gte=fecha_inicio_dt,
+                fecha__lte=fecha_fin_dt
+            )
+        except ValueError:
+            messages.error(request, 'Formato de fecha inválido')
     
     # Calcular totales
     total_ventas = ventas.count()
-    total_ingresos = ventas.aggregate(Sum('total_venta'))['total_venta__sum'] or 0
+    total_ingresos = ventas.aggregate(
+        total=Sum('total_venta', default=0)
+    )['total']
     
-    # Agrupar ventas por día
-    ventas_por_dia = ventas.annotate(
-        dia=TruncDate('fecha')
-    ).values('dia').annotate(
-        total=Sum('total_venta'),
-        cantidad=Count('id_venta')
-    ).order_by('dia')
-
-    context = {
-        'ventas': ventas,
-        'total_ventas': total_ventas,
-        'total_ingresos': total_ingresos,
-        'ventas_por_dia': ventas_por_dia,
+    # Agrupar ventas por fecha
+    ventas_por_fecha = ventas.values('fecha__date').annotate(
+        cantidad=Count('id_venta'),
+        total=Sum('total_venta')
+    ).order_by('fecha__date')
+    
+    return render(request, 'inventario/reportes/ventas.html', {
         'fecha_inicio': fecha_inicio,
         'fecha_fin': fecha_fin,
-    }
-    return render(request, 'inventario/reportes/ventas.html', context)
+        'total_ventas': total_ventas,
+        'total_ingresos': total_ingresos,
+        'ventas_por_fecha': ventas_por_fecha,
+    })
 
 @login_required
 @group_required('Administradores')
