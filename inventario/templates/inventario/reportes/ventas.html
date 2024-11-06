@@ -66,9 +66,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for venta in ventas_por_dia %}
+                        {% for venta in ventas_por_fecha %}
                         <tr>
-                            <td>{{ venta.dia|date:"d/m/Y" }}</td>
+                            <td>{{ venta.fecha|date:"d/m/Y" }}</td>
                             <td>{{ venta.cantidad }}</td>
                             <td>Q{{ venta.total|floatformat:2 }}</td>
                         </tr>
@@ -85,17 +85,40 @@
 </div>
 
 <style>
-@media print {
-    .navbar, .btn-light, form {
-        display: none !important;
+    @media print {
+        .navbar, .btn-light, form {
+            display: none !important;
+        }
+        .card {
+            border: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .card-header {
+            background-color: #fff !important;
+            color: #000 !important;
+        }
+        .container {
+            width: 100% !important;
+            max-width: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .table {
+            width: 100% !important;
+            margin-bottom: 1rem;
+            page-break-inside: auto;
+        }
+        tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+        thead {
+            display: table-header-group;
+        }
+        tfoot {
+            display: table-footer-group;
+        }
     }
-    .card {
-        border: none !important;
-    }
-    .card-header {
-        background-color: #fff !important;
-        color: #000 !important;
-    }
-}
-</style>
+    </style>
 {% endblock %}

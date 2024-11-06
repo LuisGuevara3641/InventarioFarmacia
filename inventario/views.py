@@ -250,18 +250,32 @@ def editar_cliente(request, nit):
 
 # ---------------------------------- Vista para eliminar un cliente ----------------------------------
 @login_required
-@group_required('Administradores','Empleados')
+@group_required('Administradores', 'Empleados')
 def eliminar_cliente(request, nit):
+    cliente = get_object_or_404(Cliente, nit=nit)
+    
     try:
-        cliente = get_object_or_404(Cliente, nit=nit)
-        if request.method == 'POST':
+        with transaction.atomic():
+            # Obtener todas las ventas del cliente
+            ventas = Venta.objects.filter(nit=cliente)
+            
+            # Para cada venta, restaurar el stock de los productos
+            for venta in ventas:
+                detalles = DetalleVenta.objects.filter(id_venta=venta)
+                for detalle in detalles:
+                    producto = detalle.id_producto
+                    # Restaurar el stock sumando la cantidad vendida
+                    producto.stock += detalle.cantidad_producto
+                    producto.save()
+            
+            # Eliminar el cliente (esto eliminará en cascada las ventas y sus detalles)
             cliente.delete()
-            messages.success(request, 'Cliente eliminado exitosamente.')
-            return redirect('lista_clientes')
-        return render(request, 'inventario/confirmar_eliminacion.html', {'cliente': cliente})
-    except Cliente.DoesNotExist:
-        messages.error(request, f'No se encontró el cliente con NIT {nit}.')
-        return redirect('lista_clientes')
+            
+            messages.success(request, 'Cliente eliminado exitosamente y stock restaurado.')
+    except Exception as e:
+        messages.error(request, f'Error al eliminar el cliente: {str(e)}')
+    
+    return redirect('lista_clientes')
 
 # ---------------------------------- Vista para listar ventas ----------------------------------
 @login_required
@@ -418,11 +432,28 @@ def editar_venta(request, venta_id):
 
 # ---------------------------------- Vista para eliminar una venta ----------------------------------
 @login_required
-@group_required('Administradores','Empleados')  # Accesible para empleados
+@group_required('Administradores', 'Empleados')
 def eliminar_venta(request, venta_id):
     venta = get_object_or_404(Venta, id_venta=venta_id)
-    venta.delete()
-    messages.success(request, 'Venta eliminada exitosamente.')
+    
+    try:
+        with transaction.atomic():
+            # Obtener todos los detalles de la venta y restaurar el stock antes de eliminar
+            detalles = DetalleVenta.objects.filter(id_venta=venta)
+            
+            for detalle in detalles:
+                producto = detalle.id_producto
+                # Restaurar el stock sumando la cantidad vendida
+                producto.stock += detalle.cantidad_producto
+                producto.save()
+            
+            # Eliminar la venta (esto eliminará en cascada los detalles)
+            venta.delete()
+            
+            messages.success(request, 'Venta eliminada exitosamente y stock restaurado.')
+    except Exception as e:
+        messages.error(request, f'Error al eliminar la venta: {str(e)}')
+    
     return redirect('lista_ventas')
 
 # ---------------------------------- Vistas de Reportes ----------------------------------
@@ -480,10 +511,13 @@ def reporte_ventas(request):
 def reporte_stock(request):
     productos = Producto.objects.all().select_related('codigo_categoria')
     
-    # Productos con stock bajo
-    productos_stock_bajo = productos.filter(stock__lte=F('stock_minimo'))
+    # Productos con stock bajo (mayor que 0 pero menor o igual al mínimo)
+    productos_stock_bajo = productos.filter(
+        stock__gt=0,  # stock mayor que 0
+        stock__lte=F('stock_minimo')  # pero menor o igual al mínimo
+    )
     
-    # Productos agotados
+    # Productos agotados (stock = 0)
     productos_agotados = productos.filter(stock=0)
     
     # Productos por categoría
@@ -740,9 +774,23 @@ def editar_categoria(request, categoria_id):
 @group_required('Administradores')
 def eliminar_categoria(request, categoria_id):
     categoria = get_object_or_404(CategoriaProducto, codigo_categoria=categoria_id)
+    
     try:
+        # Verificar si hay productos en esta categoría
+        productos = Producto.objects.filter(codigo_categoria=categoria)
+        if productos.exists():
+            productos_lista = ", ".join([p.nombre for p in productos])
+            messages.error(
+                request, 
+                f'No se puede eliminar la categoría porque tiene productos asociados: {productos_lista}. '
+                'Por favor, reasigne o elimine estos productos primero.'
+            )
+            return redirect('lista_categorias')
+            
         categoria.delete()
         messages.success(request, 'Categoría eliminada exitosamente.')
+        
     except Exception as e:
         messages.error(request, f'Error al eliminar la categoría: {str(e)}')
+    
     return redirect('lista_categorias')

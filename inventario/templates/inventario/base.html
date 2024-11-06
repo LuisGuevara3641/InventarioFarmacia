@@ -34,7 +34,7 @@
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
-                <a class="navbar-brand" href="{% url 'lista_productos' %}">
+                <a class="navbar-brand" href="{% if user.groups.all.0.name == 'Administradores' %}{% url 'lista_productos' %}{% else %}{% url 'lista_clientes' %}{% endif %}">
                     <i class="fas fa-clinic-medical"></i> Sistema Farmacia
                 </a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
