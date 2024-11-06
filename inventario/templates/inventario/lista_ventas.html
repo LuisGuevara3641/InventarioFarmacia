@@ -34,12 +34,11 @@
                            value="{{ now|date:'Y-m-d' }}">
                 </div>
                 <div class="col-md-4">
-                    <select id="clienteFilter" class="form-control">
+                    <select class="form-control">
                         <option value="">Todos los clientes</option>
-                        {% regroup ventas by nit as clientes_list %}
-                        {% for cliente in clientes_list %}
-                            <option value="{{ cliente.grouper.nit }}">
-                                {{ cliente.grouper.primer_nombre }} {{ cliente.grouper.primer_apellido }}
+                        {% for cliente in clientes %}
+                            <option value="{{ cliente.nit }}">
+                                {{ cliente.primer_nombre }} {{ cliente.primer_apellido }}
                             </option>
                         {% endfor %}
                     </select>

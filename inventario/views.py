@@ -249,19 +249,32 @@ def editar_cliente(request, nit):
 
 # ---------------------------------- Vista para eliminar un cliente ----------------------------------
 @login_required
-@group_required('Administradores','Empleados')  # Accesible para empleados
-def eliminar_cliente(request, cliente_id):
-    cliente = get_object_or_404(Cliente, nit=cliente_id)
-    cliente.delete()
-    messages.success(request, 'Cliente eliminado exitosamente.')
-    return redirect('lista_clientes')
+@group_required('Administradores','Empleados')
+def eliminar_cliente(request, nit):
+    try:
+        cliente = get_object_or_404(Cliente, nit=nit)
+        if request.method == 'POST':
+            cliente.delete()
+            messages.success(request, 'Cliente eliminado exitosamente.')
+            return redirect('lista_clientes')
+        return render(request, 'inventario/confirmar_eliminacion.html', {'cliente': cliente})
+    except Cliente.DoesNotExist:
+        messages.error(request, f'No se encontró el cliente con NIT {nit}.')
+        return redirect('lista_clientes')
 
 # ---------------------------------- Vista para listar ventas ----------------------------------
 @login_required
-@group_required('Administradores','Empleados')  # Accesible para empleados
+@group_required('Administradores','Empleados')
 def lista_ventas(request):
     ventas = Venta.objects.all()
-    return render(request, 'inventario/lista_ventas.html', {'ventas': ventas})
+    clientes = Cliente.objects.filter(
+        nit__in=ventas.values_list('nit', flat=True)
+    ).distinct()
+    
+    return render(request, 'inventario/lista_ventas.html', {
+        'ventas': ventas,
+        'clientes': clientes
+    })
 
 # ---------------------------------- Vista para crear una nueva venta ----------------------------------
 @login_required
@@ -645,8 +658,17 @@ def editar_pedido(request, pedido_id):
 def eliminar_pedido(request, pedido_id):
     pedido = get_object_or_404(Pedido, id_pedido=pedido_id)
     try:
-        pedido.delete()
-        messages.success(request, 'Pedido eliminado exitosamente.')
+        with transaction.atomic():
+            detalles = DetallePedido.objects.filter(id_pedido=pedido)
+            
+            for detalle in detalles:
+                producto = detalle.id_producto
+                producto.stock -= detalle.cantidad_pedido
+                producto.save()
+            
+            pedido.delete()
+            
+            messages.success(request, 'Pedido eliminado exitosamente y stock actualizado.')
     except Exception as e:
         messages.error(request, f'Error al eliminar el pedido: {str(e)}')
     return redirect('lista_pedidos')
